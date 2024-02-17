@@ -1,9 +1,9 @@
 mod matrix;
-use matrix::Matrix;
 
 #[cfg(test)]
 mod test {
-    use super::Matrix;
+    use super::matrix::Matrix;
+    use rand::random;
 
     #[test]
     fn test_init() {
@@ -42,6 +42,15 @@ mod test {
         println!("{:?}", result);
 
         assert_eq!(result.as_nested_vec(), vec![vec![9f32, 22f32, 34f32], vec![14f32, 35f32, 54f32], vec![31f32, 68f32, 106f32]])
+    }
+
+    #[test]
+    fn test_random() {
+        let mat = Matrix::<u8>::random::<f32>(30, 35, &|_| random::<u8>()%30, &|| 2.0);
+        println!("{:?}", mat);
+        assert_eq!(mat.len_cols(), 35);
+        assert_eq!(mat.len_rows(), 30);
+        assert_eq!(Matrix::valid_from_vector(mat.as_nested_vec_ref()).unwrap(), 30);
     }
 }
 fn main() {
