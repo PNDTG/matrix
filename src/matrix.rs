@@ -53,6 +53,16 @@ impl<'a, T> IntoIterator for &'a Matrix<T> {
     }
 }
 
+impl<'a, T> IntoIterator for &'a mut Matrix<T> {
+    type Item = &'a mut Vec<T>;
+    type IntoIter = std::slice::IterMut<'a, Vec<T>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let matrix = &mut self.mat;
+        matrix.iter_mut()
+    }
+}
+
 impl<T> Default for Matrix<T> {
     fn default() -> Self {
         Matrix { mat: Vec::from(Vec::new()), rows: 0, columns: 0 }
@@ -112,6 +122,8 @@ impl<T> Matrix<T> {
         self.mat.push(column);
         self.columns += 1;
     }
+
+    // TODO: Remember to add pop, I totally forgot about it.
     
     pub fn row(&self, row_idx: usize) -> Vec<T> 
         where T: Copy{
@@ -163,6 +175,19 @@ impl<T: Default> Matrix<T> {
             }
         }
         Matrix { mat: mat, rows: rows, columns: columns }
+    }
+
+    pub fn random<S>(rows: usize, columns: usize, rand_fn: &dyn Fn(S) -> T, seed_fn: &dyn Fn() -> S) -> Matrix<T> 
+        where T: Copy{
+        let mut mat = Matrix::zeros(rows, columns);
+
+        for i in &mut mat {
+            for j in i {
+                *j = rand_fn(seed_fn());
+            }
+        }
+
+        mat
     }
 }
 
