@@ -20,10 +20,10 @@ impl<T> std::ops::IndexMut<usize> for Matrix<T> {
 
 impl<T: PartialEq> std::cmp::PartialEq for Matrix<T> {
     fn eq(&self, other: &Self) -> bool {
-        if self.len_cols() != other.len_cols() || self.len_rows() != other.len_rows() {
+        if self.columns != other.len_cols() || self.len_rows() != other.len_rows() {
             return false
         }
-        for i in 0..self.len_cols() {
+        for i in 0..self.columns {
             for j in 0..self.len_rows() {
                 if self[i][j] != other[i][j] {
                     return false;
@@ -53,9 +53,15 @@ impl<'a, T> IntoIterator for &'a Matrix<T> {
     }
 }
 
+impl<T> Default for Matrix<T> {
+    fn default() -> Self {
+        Matrix { mat: Vec::from(Vec::new()), rows: 0, columns: 0 }
+    }
+}
+
 impl<T> Matrix<T> {
     pub fn new() -> Self {
-        Matrix { mat: Vec::from(Vec::new()), rows: 0, columns: 0 }
+        Matrix { mat: Vec::from(Vec::new()), rows: 0, columns: 0 } // Not sure if I should return the Default trait or not
     }
 
     pub fn from(matrix: Vec<Vec<T>>) -> Self {
@@ -106,15 +112,7 @@ impl<T> Matrix<T> {
         self.mat.push(column);
         self.columns += 1;
     }
-
-    pub fn len_cols(&self) -> usize {
-        self.columns
-    }
-
-    pub fn len_rows(&self) -> usize {
-        self.rows
-    }
-
+    
     pub fn row(&self, row_idx: usize) -> Vec<T> 
         where T: Copy{
         let mut res: Vec<T> = Vec::new();
@@ -132,15 +130,31 @@ impl<T> Matrix<T> {
         }
         res
     }
+
+    pub fn len_cols(&self) -> usize {
+        self.columns
+    }
+
+    pub fn len_rows(&self) -> usize {
+        self.rows
+    }
+
+    pub fn as_nested_vec(self) -> Vec<Vec<T>> {
+        self.mat
+    }
+
+    pub fn as_nested_vec_ref(&self) -> &Vec<Vec<T>> {
+        &self.mat
+    }
 }
 
 impl<T: Default> Matrix<T> {
-    pub fn default(rows: usize, columns: usize) -> Self 
+    pub fn zeros(rows: usize, columns: usize) -> Self 
         where T: Copy {
         Matrix { mat: vec![vec![T::default(); rows]; columns], rows: rows, columns: columns }
     }
 
-    pub fn default_no_copy(rows: usize, columns: usize) -> Self {
+    pub fn zeros_no_copy(rows: usize, columns: usize) -> Self {
         let mut mat: Vec<Vec<T>> = Vec::new();
         for _ in 0..columns {
             mat.push(Vec::new());
@@ -152,31 +166,35 @@ impl<T: Default> Matrix<T> {
     }
 }
 
-use std::ops::Mul;
-use std::ops::Add;
-use std::iter::Sum;
-impl<N: Copy + Mul<Output = N> + Add<N, Output = N> + Sum > Matrix<N> {
+mod matrix_num {
 
-    pub fn dot(&self, matrix_2: &Self) -> Self 
-        where N: Default{
-        if self.columns != matrix_2.rows {
-            panic!("Mismatched rows and columns, cannot perform dot product:\n
-                The columns of the first origin matrix and the rows of the second matrix must be the same size.\n
-                Given origin columns -> {}, Given second rows -> {}", self.columns, matrix_2.rows);
-        }
-        let mut mat: Self = Matrix::default(self.rows, matrix_2.columns);
-
-        for i in 0..mat.len_cols() {
-            for j in 0..mat.len_rows() {
-                mat[i][j] = Matrix::vector_dot(matrix_2.column(i), self.row(j))
+    use std::ops::Mul;
+    use std::ops::Add;
+    use std::iter::Sum;
+    use super::Matrix;
+    impl<N: Copy + Mul<Output = N> + Add<N, Output = N> + Sum > Matrix<N> {
+    
+        pub fn dot(&self, matrix_2: &Self) -> Self 
+            where N: Default{
+            if self.columns != matrix_2.rows {
+                panic!("Mismatched rows and columns, cannot perform dot product:\n
+                    The columns of the first origin matrix and the rows of the second matrix must be the same size.\n
+                    Given origin columns -> {}, Given second rows -> {}", self.columns, matrix_2.rows);
             }
+            let mut mat: Self = Matrix::zeros(self.rows, matrix_2.columns);
+    
+            for i in 0..mat.len_cols() {
+                for j in 0..mat.len_rows() {
+                    mat[i][j] = Matrix::vector_dot(matrix_2.column(i), self.row(j))
+                }
+            }
+    
+            mat
         }
-
-        mat
-    }
-
-    pub fn vector_dot(vec_1: Vec<N>, vec_2: Vec<N>) -> N {
-        vec_1.iter().zip(vec_2.iter()).map(|(x, y)| *x * *y).sum()
+    
+        pub fn vector_dot(vec_1: Vec<N>, vec_2: Vec<N>) -> N {
+            vec_1.iter().zip(vec_2.iter()).map(|(x, y)| *x * *y).sum()
+        }
     }
 }
 
@@ -194,7 +212,7 @@ mod test {
 
         println!("my_mat -> {:?}, another one -> {:?}", my_matrix, another_mat);
 
-        assert_eq!(another_mat.mat, vec![vec![]]);
+        assert_eq!(another_mat.as_nested_vec(), vec![vec![]]);
     }
 
     #[test]
@@ -202,13 +220,13 @@ mod test {
         let mut my_matrix: Matrix<f32> = Matrix::new();
 
         my_matrix.push_column(vec![2.0, 34.2]);
-        assert_eq!(my_matrix.mat, vec![vec![2.0, 34.2]]);
+        assert_eq!(my_matrix.as_nested_vec_ref(), &vec![vec![2.0, 34.2]]);
 
         my_matrix.push_column(vec![4.6, 6.4]);
-        assert_eq!(my_matrix.mat, vec![vec![2.0, 34.2], vec![4.6, 6.4]]);
+        assert_eq!(my_matrix.as_nested_vec_ref(), &vec![vec![2.0, 34.2], vec![4.6, 6.4]]);
 
         my_matrix.push_row(vec![5.7, 9.5]);
-        assert_eq!(my_matrix.mat, vec![vec![2.0, 34.2, 5.7], vec![4.6, 6.4, 9.5]]);
+        assert_eq!(my_matrix.as_nested_vec(), vec![vec![2.0, 34.2, 5.7], vec![4.6, 6.4, 9.5]]);
     }
 
     #[test]
@@ -220,7 +238,7 @@ mod test {
 
         println!("{:?}", result);
 
-        assert_eq!(result.mat, vec![vec![9f32, 22f32, 34f32], vec![14f32, 35f32, 54f32], vec![31f32, 68f32, 106f32]])
+        assert_eq!(result.as_nested_vec(), vec![vec![9f32, 22f32, 34f32], vec![14f32, 35f32, 54f32], vec![31f32, 68f32, 106f32]])
     }
 }
 fn main() {
