@@ -123,7 +123,20 @@ impl<T> Matrix<T> {
         self.columns += 1;
     }
 
-    // TODO: Remember to add pop, I totally forgot about it.
+    // TODO: Remember to add pop, I totally forgot about it. (TEMP: ON IT! 3:48.19/2/24)
+    pub fn pop_rows(&mut self) -> Option<Vec<T>> {
+        let mut res: Vec<T> = Vec::new();
+        if self.rows == 0 {return None}
+        for i in &mut self.mat {
+            res.push(i.pop().unwrap());
+        }
+        Some(res)
+    }
+
+    pub fn pop_columns(&mut self) -> Option<Vec<T>> {
+        if self.columns == 0 {return None}
+        Some(self.mat.pop().unwrap())
+    }
     
     pub fn row(&self, row_idx: usize) -> Vec<T> 
         where T: Copy{

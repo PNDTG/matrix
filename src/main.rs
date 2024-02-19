@@ -19,7 +19,7 @@ mod test {
     }
 
     #[test]
-    fn test_push() {
+    fn test_push_pop() {
         let mut my_matrix: Matrix<f32> = Matrix::new();
 
         my_matrix.push_column(vec![2.0, 34.2]);
@@ -29,7 +29,13 @@ mod test {
         assert_eq!(my_matrix.as_nested_vec_ref(), &vec![vec![2.0, 34.2], vec![4.6, 6.4]]);
 
         my_matrix.push_row(vec![5.7, 9.5]);
-        assert_eq!(my_matrix.as_nested_vec(), vec![vec![2.0, 34.2, 5.7], vec![4.6, 6.4, 9.5]]);
+        assert_eq!(my_matrix.as_nested_vec_ref(), &vec![vec![2.0, 34.2, 5.7], vec![4.6, 6.4, 9.5]]);
+
+        assert_eq!(my_matrix.pop_columns(), Some(vec![4.6, 6.4, 9.5]));
+        assert_eq!(my_matrix.as_nested_vec_ref(), &vec![vec![2.0, 34.2, 5.7]]);
+
+        assert_eq!(my_matrix.pop_rows(), Some(vec![5.7]));
+        assert_eq!(my_matrix.as_nested_vec(), vec![vec![2.0, 34.2]])
     }
 
     #[test]
