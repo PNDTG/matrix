@@ -123,7 +123,6 @@ impl<T> Matrix<T> {
         self.columns += 1;
     }
 
-    // TODO: Remember to add pop, I totally forgot about it. (TEMP: ON IT! 3:48.19/2/24)
     pub fn pop_rows(&mut self) -> Option<Vec<T>> {
         let mut res: Vec<T> = Vec::new();
         if self.rows == 0 {return None}
@@ -190,8 +189,10 @@ impl<T: Default> Matrix<T> {
         Matrix { mat: mat, rows: rows, columns: columns }
     }
 
-    pub fn random<S>(rows: usize, columns: usize, rand_fn: &dyn Fn(S) -> T, seed_fn: &dyn Fn() -> S) -> Matrix<T> 
-        where T: Copy{
+    // TODO: Placeholder for normal random and implementation of the trait... I have no idea what to do and I'm too excited for SIMD implementation!
+
+    pub fn legacy_random<S>(rows: usize, columns: usize, rand_fn: &dyn Fn(S) -> T, seed_fn: &dyn Fn() -> S) -> Matrix<T> 
+        where T: Copy{ // Lol, "legacy", as if I've been programming this program for years now!
         let mut mat = Matrix::zeros(rows, columns);
 
         for i in &mut mat {
@@ -235,3 +236,80 @@ mod matrix_num {
         }
     }
 }
+
+// trait MatrixCalculations<T> {
+//     fn vector_dot(vec1: Vec<T>, vec2: Vec<T>) -> T;
+// }
+
+// #[repr(align(32))]
+// pub struct F32Align32Array<'a>(pub &'a [f32; 8]);
+
+// THIS IS A MESS! GOSH! It's all because I didn't know to do aligned_malloc... man...
+// mod matrix_simd {
+//     use std::arch::x86_64::{__m256, _mm256_fmadd_ps, _mm256_load_ps};
+
+//     use super::Matrix;
+//     use super::F32Align32Array;
+//     use super::MatrixCalculations;
+
+//     impl Matrix<f32> {
+//         fn vector_dot_256(vec_1: F32Align32Array, vec_2: F32Align32Array, previous: __m256) -> __m256 {
+//             let vec_1_mm: __m256;
+//             let vec_2_mm: __m256;
+//             let res: __m256;
+//             unsafe {
+//                 vec_1_mm = _mm256_load_ps(&vec_1.0[0]);
+//                 vec_2_mm = _mm256_load_ps(&vec_2.0[0]);
+//                 res = _mm256_fmadd_ps(vec_1_mm, vec_2_mm, previous);
+//             }
+//             res
+//         }
+        
+//         // pub fn vector_dot(vec_1: Vec<f32>, vec_2: Vec<f32>) {
+            
+//         // }
+//     }
+//     impl MatrixCalculations<f32> for Matrix<f32> {
+//         fn vector_dot(vec1: Vec<f32>, vec2: Vec<f32>) -> f32 {
+//             if vec1.len() != vec2.len() {
+//                 panic!("Given vectors do not match in size. vec1.len() -> {}, vec2.len() -> {}", vec1.len(), vec2.len());
+//             }
+
+//             let mut inter1: Vec<&[f32]> = vec1.chunks(8).collect();
+//             let mut inter2: Vec<&[f32]> = vec2.chunks(8).collect();
+//             let mut sum: __m256;
+
+//             let resize = F32Align32Array(&[0.0f32; 8]);
+//             let last = inter1.pop().unwrap();
+//             for i in 0..last.len() {
+//                 resize.0[i] = last[i];
+//             }
+//             for i in last.len()..resize.0.len() {
+//                 resize.0[i] = 0.0f32;
+//             }
+//             let mut vec_mm1 = resize;
+
+//             let resize = F32Align32Array(&[0.0f32; 8]);
+//             let last = inter2.pop().unwrap();
+//             for i in 0..last.len() {
+//                 resize.0[i] = last[i];
+//             }
+//             for i in last.len()..resize.0.len() {
+//                 resize.0[i] = 0.0f32;
+//             }
+//             let mut vec_mm2 = resize;
+
+//             unsafe {
+//                 sum = Matrix::vector_dot_256(vec_mm1, vec_mm2, sum);
+
+//                 for i in 0..inter1.len() {
+//                     let vec_mm1 = F32Align32Array(inter1[i].into());
+//                     let vec_mm1 = F32Align32Array(inter2[i]);
+//                     sum = Matrix::vector_dot_256(vec_mm1, vec_mm2, sum);
+//                 }
+                
+//             }
+//             0.0
+//         }
+//     }
+// }

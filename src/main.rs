@@ -52,13 +52,14 @@ mod test {
 
     #[test]
     fn test_random() {
-        let mat = Matrix::<u8>::random::<f32>(30, 35, &|_| random::<u8>()%30, &|| 2.0);
+        let mat = Matrix::<u8>::legacy_random::<f32>(30, 35, &|_| random::<u8>()%30, &|| 2.0);
         println!("{:?}", mat);
         assert_eq!(mat.len_cols(), 35);
         assert_eq!(mat.len_rows(), 30);
         assert_eq!(Matrix::valid_from_vector(mat.as_nested_vec_ref()).unwrap(), 30);
     }
 }
+
 fn main() {
     println!("Hello, world!");
 }
