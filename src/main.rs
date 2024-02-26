@@ -1,3 +1,5 @@
+use std::{alloc::Layout, arch::x86_64::__m256i};
+
 mod matrix;
 
 #[cfg(test)]
